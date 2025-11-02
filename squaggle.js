@@ -47,21 +47,55 @@
     'and', 'or', ','
   ]);
 
+
+  // get lowercased first consonant cluser of word (empty string if word starts w/ a vowel)
+  function getFirstCluster(word) {
+    let wl = word.toLowerCase();
+    let vowels = 'aeiouy';
+    let i = 0;
+    for (; i < wl.length; i++) {
+      if (vowels.includes(wl[i])) {
+        break;
+      }
+    }
+    ///TODO: handle weird words that are all consonants somewhere else?
+    return wl.substring(0, i);
+  }
+
   // squaggle list of (node, startindex, word) tuples
   // this function is the one that actually applies modifications to the nodes
-  function squaggleWords(wordlist) {
-    if (wordlist.length <= 1) {
+  function squaggleWords(words) {
+    actualwords = words.filter(t => {
+      return !(GHOST_WORDS.has(t[2].toLowerCase()));
+    });
+    if (actualwords.length <= 1) {
       return;
     }
 
-    console.log("squaggling: ", wordlist);
+    // the actual squaggling operation: replace first consonant cluster
+    // of words[i] with the first cluster of words [i+1] (mod array size)
+    for (let i = 0; i < actualwords.length; i++) {
+      let [dstnode, dstindex, dstword] = actualwords[i];
+      let srcword = actualwords[(i + 1) % actualwords.length][2];
+
+      let dstcluster = getFirstCluster(dstword);
+      let srccluster = getFirstCluster(srcword);
+      let newword = srccluster + dstword.slice(dstcluster.length)
+
+      if (/[A-Z]/.test(dstword[0])) {
+        newword = newword[0].toUpperCase() + newword.slice(1);
+      }
+      console.log("word", dstword, "dst", dstcluster, "src", srccluster, "squaggled word:", newword);
+    }
+
+    console.log("squaggling: ", actualwords);
   }
 
   // squaggles list of (node, text) tuples
   function squaggleSequence(seq) {
     let wordlist = [];
     for (const [node, text] of seq) {
-      const wordregex = /\w+|[^\w\s]+/g;
+      const wordregex = /\b[a-zA-Z]+(?:['\-][a-zA-Z]+)*\b/gs;
       const matches = text.matchAll(wordregex);
 
       for (const match of matches) {
@@ -78,11 +112,6 @@
           wordlist.push([node, match.index, word]);
         }
       }
-    }
-    console.log("HERE");
-    // squaggle anything left over
-    if (wordlist.length) {
-      // squaggleWords(wordlist);
     }
   }
 
