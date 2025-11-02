@@ -89,7 +89,7 @@
         wordstosquaggle.push(actualwords.slice(i, i + 2));
       }
     }
-    console.log("squaggling:", wordstosquaggle);
+    // console.log("squaggling:", wordstosquaggle);
 
     // the actual squaggling operation: replace first consonant cluster
     // of words[i] with the first cluster of words [i+1] (mod array size)
@@ -106,12 +106,12 @@
         if (/[A-Z]/.test(dstword[0])) {
           newword = newword[0].toUpperCase() + newword.slice(1);
         }
-        console.log("word", dstword, "dst", dstcluster, "src", srccluster, "squaggled word:", newword);
+        // console.log("word", dstword, "dst", dstcluster, "src", srccluster, "squaggled word:", newword);
         replacements.push([dstnode, dstindex, dstindex + dstword.length, newword]);
       }
     }
 
-    console.log("replacements:", replacements);
+    // console.log("replacements:", replacements);
     return replacements;
   }
 
@@ -126,7 +126,7 @@
 
       for (const match of matches) {
         let word = match[0];
-        console.log("processing word: ", word);
+        // console.log("processing word: ", word);
         // hit barrier: current word list complete, send to squaggle and start over
         // (numbers are also barriers)
         let barrier = BARRIER_WORDS.has(word.toLowerCase()) || /\d/.test(word[0]);
@@ -145,11 +145,11 @@
 
     // apply replacements to squaggle nodes (in reverse order by startindex)
     squagglereplacements.sort((a, b) => b[1] - a[1]);
-    console.log(squagglereplacements);
+    // console.log(squagglereplacements);
     for ([node, start, end, newword] of squagglereplacements) {
       let originaltext = node.nodeValue;
       let newtext = originaltext.slice(0, start) + newword + originaltext.slice(end)
-      console.log(node, "after replacement:", newtext);
+      // console.log(node, "after replacement:", newtext);
       newtext = newtext.replaceAll("Wikipedia", "Pikiwedia"); ///TODO: define a global list of these?
       node.nodeValue = newtext;
     }
@@ -170,7 +170,7 @@
       }
       sequence.push([node, text]);
     }
-    console.log("p sequence:", sequence);
+    // console.log("p sequence:", sequence);
 
     squaggleSequence(sequence);
   }
