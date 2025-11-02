@@ -51,10 +51,11 @@
   // get lowercased first consonant cluser of word (empty string if word starts w/ a vowel)
   function getFirstCluster(word) {
     let wl = word.toLowerCase();
-    let vowels = 'aeiouy';
+    let vowels = 'aeiou';
     let i = 0;
     for (; i < wl.length; i++) {
-      if (vowels.includes(wl[i])) {
+      // y is only a vowel after a consonant
+      if (vowels.includes(wl[i]) || (i != 0 && wl[i] == 'y')) {
         break;
       }
     }
@@ -71,24 +72,43 @@
     if (actualwords.length <= 1) {
       return [];
     }
-    console.log("squaggling:", words);
+
+    // don't want to squaggle >3 words at once
+    let wordstosquaggle = [actualwords]
+    if (actualwords.length > 3) {
+      wordstosquaggle = []
+      ///TODO: try to figure out where a natural boundary would be
+
+      // couldn't find one, just split into 2s
+      let i = 0;
+      if (actualwords.length % 2 != 0) {
+        i += 3;
+        wordstosquaggle.push(actualwords.slice(0, 3));
+      }
+      for (; i < actualwords.length; i += 2) {
+        wordstosquaggle.push(actualwords.slice(i, i + 2));
+      }
+    }
+    console.log("squaggling:", wordstosquaggle);
 
     // the actual squaggling operation: replace first consonant cluster
     // of words[i] with the first cluster of words [i+1] (mod array size)
     let replacements = [];
-    for (let i = 0; i < actualwords.length; i++) {
-      let [dstnode, dstindex, dstword] = actualwords[i];
-      let srcword = actualwords[(i + 1) % actualwords.length][2];
+    for (let swords of wordstosquaggle) {
+      for (let i = 0; i < swords.length; i++) {
+        let [dstnode, dstindex, dstword] = swords[i];
+        let srcword = swords[(i + 1) % swords.length][2];
 
-      let dstcluster = getFirstCluster(dstword);
-      let srccluster = getFirstCluster(srcword);
-      let newword = (srccluster + dstword.slice(dstcluster.length)).toLowerCase();
+        let dstcluster = getFirstCluster(dstword);
+        let srccluster = getFirstCluster(srcword);
+        let newword = (srccluster + dstword.slice(dstcluster.length)).toLowerCase();
 
-      if (/[A-Z]/.test(dstword[0])) {
-        newword = newword[0].toUpperCase() + newword.slice(1);
+        if (/[A-Z]/.test(dstword[0])) {
+          newword = newword[0].toUpperCase() + newword.slice(1);
+        }
+        console.log("word", dstword, "dst", dstcluster, "src", srccluster, "squaggled word:", newword);
+        replacements.push([dstnode, dstindex, dstindex + dstword.length, newword]);
       }
-      console.log("word", dstword, "dst", dstcluster, "src", srccluster, "squaggled word:", newword);
-      replacements.push([dstnode, dstindex, dstindex + dstword.length, newword]);
     }
 
     console.log("replacements:", replacements);
@@ -101,7 +121,7 @@
     let wordlist = [];
     let squagglereplacements = [];
     for (const [node, text] of seq) {
-      const wordregex = /\b[a-zA-Z]+(?:['\-][a-zA-Z]+)*\b/gs;
+      const wordregex = /(\b[a-zA-Z0-9]+(?:['\-][a-zA-Z0-9]+)*\b)|([.,?!;:\"'()\[\]{}<>\-–—])/g;
       const matches = text.matchAll(wordregex);
 
       for (const match of matches) {
