@@ -63,37 +63,43 @@
   }
 
   // squaggle list of (node, startindex, word) tuples
-  // this function is the one that actually applies modifications to the nodes
+  // returns [node, startindex, endindex, replacement word] for modification
   function squaggleWords(words) {
     actualwords = words.filter(t => {
       return !(GHOST_WORDS.has(t[2].toLowerCase()));
     });
     if (actualwords.length <= 1) {
-      return;
+      return [];
     }
+    console.log("squaggling:", words);
 
     // the actual squaggling operation: replace first consonant cluster
     // of words[i] with the first cluster of words [i+1] (mod array size)
+    let replacements = [];
     for (let i = 0; i < actualwords.length; i++) {
       let [dstnode, dstindex, dstword] = actualwords[i];
       let srcword = actualwords[(i + 1) % actualwords.length][2];
 
       let dstcluster = getFirstCluster(dstword);
       let srccluster = getFirstCluster(srcword);
-      let newword = srccluster + dstword.slice(dstcluster.length)
+      let newword = (srccluster + dstword.slice(dstcluster.length)).toLowerCase();
 
       if (/[A-Z]/.test(dstword[0])) {
         newword = newword[0].toUpperCase() + newword.slice(1);
       }
       console.log("word", dstword, "dst", dstcluster, "src", srccluster, "squaggled word:", newword);
+      replacements.push([dstnode, dstindex, dstindex + dstword.length, newword]);
     }
 
-    console.log("squaggling: ", actualwords);
+    console.log("replacements:", replacements);
+    return replacements;
   }
 
   // squaggles list of (node, text) tuples
+  // this function is the one that actually applies modifications to the nodes
   function squaggleSequence(seq) {
     let wordlist = [];
+    let squagglereplacements = [];
     for (const [node, text] of seq) {
       const wordregex = /\b[a-zA-Z]+(?:['\-][a-zA-Z]+)*\b/gs;
       const matches = text.matchAll(wordregex);
@@ -105,13 +111,23 @@
         // (numbers are also barriers)
         let barrier = BARRIER_WORDS.has(word.toLowerCase()) || /\d/.test(word[0]);
         if (barrier) {
-          squaggleWords(wordlist);
+          squagglereplacements = squagglereplacements.concat(squaggleWords(wordlist));
           wordlist = [];
         }
         else {
           wordlist.push([node, match.index, word]);
         }
       }
+    }
+
+    // apply replacements to squaggle nodes (in reverse order by startindex)
+    squagglereplacements.sort((a, b) => b[1] - a[1]);
+    console.log(squagglereplacements);
+    for ([node, start, end, newword] of squagglereplacements) {
+      let originaltext = node.nodeValue;
+      let newtext = originaltext.slice(0, start) + newword + originaltext.slice(end)
+      console.log(node, "after replacement:", newtext);
+      node.nodeValue = newtext;
     }
   }
 
@@ -155,11 +171,9 @@
   // }
 
   function walkAndSquaggle(rootNode) {
-    console.log("SQUAGGLE");
     const ps = document.querySelectorAll('p');
     for (p of ps) {
       squaggleNode(p);
-      break;
     }
 
     // const walker = document.createTreeWalker(
