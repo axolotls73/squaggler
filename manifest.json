@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Squaggler",
+  "version": "1.0",
+  "description": "",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["squaggle.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
