@@ -139,6 +139,9 @@
         }
       }
     }
+    if (wordlist.length) {
+      squagglereplacements = squagglereplacements.concat(squaggleWords(wordlist));
+    }
 
     // apply replacements to squaggle nodes (in reverse order by startindex)
     squagglereplacements.sort((a, b) => b[1] - a[1]);
@@ -147,6 +150,7 @@
       let originaltext = node.nodeValue;
       let newtext = originaltext.slice(0, start) + newword + originaltext.slice(end)
       console.log(node, "after replacement:", newtext);
+      newtext = newtext.replaceAll("Wikipedia", "Pikiwedia"); ///TODO: define a global list of these?
       node.nodeValue = newtext;
     }
   }
@@ -171,48 +175,18 @@
     squaggleSequence(sequence);
   }
 
-  // function processNode(node) {
-  //   console.log("processing: " + node.tagName);
-  //   if (!node.nodeValue || !(node.nodeValue.trim().length > 2)) {
-  //     return;
-  //   }
-
-  //   let parent = node.parentElement;
-  //   while (parent && parent !== document.body) {
-  //     const tagName = parent.tagName.toUpperCase();
-  //     if (tagName === 'SCRIPT' || tagName === 'STYLE' || tagName === 'NOSCRIPT' || tagName === 'CODE' || tagName === 'PRE') {
-  //       return;
-  //     }
-  //     parent = parent.parentElement;
-  //   }
-
-  //   console.log(node.nodeValue);
-  //   node.nodeValue = 'a' + node.nodeValue;
-  // }
-
-  function walkAndSquaggle(rootNode) {
-    const ps = document.querySelectorAll('p');
-    for (p of ps) {
-      squaggleNode(p);
+  function squaggle(root) {
+    let nodes = root.querySelectorAll(
+      'p, h1, h2, h3, h4, h5, h6, \
+       figcaption, caption, li, td, th, \
+       #siteSub, div.hatnote.navigation-not-searchable' // wikipedia specific stuff
+    );
+    for (n of nodes) {
+      squaggleNode(n);
     }
-
-    // const walker = document.createTreeWalker(
-    //   rootNode,
-    //   NodeFilter.SHOW_TEXT, // only text nodes
-    //   null,
-    //   false
-    // );
-
-    // let node;
-    // const nodesToProcess = [];
-    // while ((node = walker.nextNode())) {
-    //   nodesToProcess.push(node);
-    // }
-
-    // nodesToProcess.forEach(processNode);
   }
 
   // run squaggler
-  walkAndSquaggle(document.body);
+  squaggle(document.body);
 
 })();
